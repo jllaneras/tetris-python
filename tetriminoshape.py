@@ -27,13 +27,13 @@ _SHAPE_MATRICES[TetriminoShape.I] = [
 ]
 
 _SHAPE_MATRICES[TetriminoShape.J] = [
-    list('X   '),
-    list('XXXX')
+    list('X  '),
+    list('XXX')
 ]
 
 _SHAPE_MATRICES[TetriminoShape.L] = [
-    list('   X'),
-    list('XXXX')
+    list('  X'),
+    list('XXX')
 ]
 
 _SHAPE_MATRICES[TetriminoShape.S] = [
