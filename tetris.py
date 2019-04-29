@@ -77,21 +77,34 @@ class Tetris():
                 else:
                     self._put_curr_tetrimino_in_matrix()
 
-            if action == Action.DOWN:
-                new_position = self.curr_tetrimino.get_pos_down()
+            if action == Action.DOWN or action == Action.LEFT or action == Action.RIGHT:
+                new_position = self._calculate_new_tetrimino_position(action)
                 tetrimino_matrix = self.curr_tetrimino.get_shape_matrix()
 
                 # Remove curr tetrimino from matrix to calculate colisions of new position
                 self._del_curr_tetrimino_from_matrix()
 
-                if self._tetrimino_out_of_bounds(tetrimino_matrix, new_position) or self._colisions(tetrimino_matrix, new_position):
-                    # The current tetrimino reached the bottom
+                if self._tetrimino_out_of_bounds(tetrimino_matrix, new_position) or self._colisions(tetrimino_matrix,
+                                                                                                    new_position):
                     self._put_curr_tetrimino_in_matrix()
-                    self.curr_tetrimino = None
-                else:
 
+                    if action == Action.DOWN:
+                        # The current tetrimino reached the bottom
+                        self.curr_tetrimino = None
+                else:
                     self.curr_tetrimino.position = new_position
                     self._put_curr_tetrimino_in_matrix()
+
+    def _calculate_new_tetrimino_position(self, action):
+        if action == Action.LEFT:
+            new_position = self.curr_tetrimino.get_pos_left()
+        elif action == Action.DOWN:
+            new_position = self.curr_tetrimino.get_pos_down()
+        elif action == Action.RIGHT:
+            new_position = self.curr_tetrimino.get_pos_right()
+        else:
+            new_position = self.curr_tetrimino.position
+        return new_position
 
     def _colisions(self, tetrimino_matrix, new_position):
         y_offset, x_offset = new_position
