@@ -1,10 +1,11 @@
 import curses
 import time
+from enum import Enum
 
 from tetrimino import Tetrimino
 from constants import (
-    MATRIX_WIDTH,
-    MATRIX_HEIGHT,
+    TETRIS_MATRIX_WIDTH,
+    TETRIS_MATRIX_HEIGHT,
     MATRIX_POS,
     MIN_WINDOW_HEIGTH,
     MIN_WINDOW_WIDTH,
@@ -17,23 +18,29 @@ class Tetris():
 
     def __init__(self):
         self.state = dict()
-        self.matrix = [[' ' for x in range(MATRIX_WIDTH)] for y in range(MATRIX_HEIGHT)]
+        self.matrix = [[' ' for x in range(TETRIS_MATRIX_WIDTH)] for y in range(TETRIS_MATRIX_HEIGHT)]
         self.prev_time = None
         self.prev_activation_time = None
         self.curr_tetrimino = None
-        self.input = None
+        self.game_over = False
 
     def main(self, stdscr):
         self._print_screen(stdscr)
 
-        while True:
+        while not self.game_over:
             tick_start_time = Tetris._get_curr_time()
 
-            self.input = stdscr.getch()
-            if self.input == ord('q'):
+            actions = []
+            user_action = Action.get_action(stdscr.getch())
+            if user_action == Action.QUIT:
                 break
+            elif user_action is not None:
+                actions.append(user_action)
 
-            self._update(tick_start_time)
+            if self._is_time_to_go_down(tick_start_time):
+                actions.append(Action.DOWN)
+
+            self._update(actions)
             self._sleep_if_possible(tick_start_time)
 
             self._print_matrix(stdscr)
@@ -49,41 +56,78 @@ class Tetris():
 
         stdscr.addstr(0, 0, '          TETRIS          ', curses.color_pair(1))
 
-        for y in range(MATRIX_HEIGHT):
+        for y in range(TETRIS_MATRIX_HEIGHT):
             stdscr.addstr(y + 1, 0, ' ', curses.color_pair(1))
-            stdscr.addstr(y + 1, MATRIX_WIDTH + 1, ' ', curses.color_pair(1))
+            stdscr.addstr(y + 1, TETRIS_MATRIX_WIDTH + 1, ' ', curses.color_pair(1))
 
-        for x in range(MATRIX_WIDTH+2):
-            stdscr.addstr(MATRIX_HEIGHT + 1, x, ' ', curses.color_pair(1))
+        for x in range(TETRIS_MATRIX_WIDTH + 2):
+            stdscr.addstr(TETRIS_MATRIX_HEIGHT + 1, x, ' ', curses.color_pair(1))
 
         self._print_matrix(stdscr)
 
-    def _update(self, tick_start_time):
-        down = self._is_time_to_go_down(tick_start_time)
+    def _update(self, actions):
+        for action in actions:
+            if self.curr_tetrimino is None:
+                self.curr_tetrimino = Tetrimino()
+                self.curr_tetrimino.position = (0, TETRIS_MATRIX_WIDTH // 2 - self.curr_tetrimino.get_width() // 2)
 
-        if self.curr_tetrimino is None:
-            self.curr_tetrimino = Tetrimino()
-            self.curr_tetrimino.position = (0, MATRIX_WIDTH//2 - self.curr_tetrimino.get_width()//2)
-            self._put_curr_tetrimino_in_matrix()
-        elif down and self.curr_tetrimino.get_higher_y_coord() < MATRIX_HEIGHT:
-            self._del_curr_tetrimino_from_matrix()
-            y, x = self.curr_tetrimino.position
-            self.curr_tetrimino.position = (y+1, x)
-            self._put_curr_tetrimino_in_matrix()
-        elif down and self.curr_tetrimino.get_higher_y_coord() == MATRIX_HEIGHT:
-            self.curr_tetrimino = None
+                if self._colisions(self.curr_tetrimino.get_shape_matrix(), self.curr_tetrimino.position):
+                    self.game_over = True
+                    return
+                else:
+                    self._put_curr_tetrimino_in_matrix()
+
+            if action == Action.DOWN:
+                new_position = self.curr_tetrimino.get_pos_down()
+                tetrimino_matrix = self.curr_tetrimino.get_shape_matrix()
+
+                # Remove curr tetrimino from matrix to calculate colisions of new position
+                self._del_curr_tetrimino_from_matrix()
+
+                if self._tetrimino_out_of_bounds(tetrimino_matrix, new_position) or self._colisions(tetrimino_matrix, new_position):
+                    # The current tetrimino reached the bottom
+                    self._put_curr_tetrimino_in_matrix()
+                    self.curr_tetrimino = None
+                else:
+
+                    self.curr_tetrimino.position = new_position
+                    self._put_curr_tetrimino_in_matrix()
+
+    def _colisions(self, tetrimino_matrix, new_position):
+        y_offset, x_offset = new_position
+
+        # Check if each cell in the tetrimino shape matrix doesn't clash with an existing tetrimino in the tetris matrix
+        for y in range(len(tetrimino_matrix)):
+            for x in range(len(tetrimino_matrix[0])):
+                if tetrimino_matrix[y][x] != ' ' and self.matrix[y_offset+y][x_offset+x] != ' ':
+                    return True
+
+        return False
+
+    def _tetrimino_out_of_bounds(self, tetrimino_matrix, new_position):
+        y, x = new_position
+        tetrimino_heigth = len(tetrimino_matrix)
+        tetrimino_width = len(tetrimino_matrix[0])
+
+        return (y + tetrimino_heigth - 1) >= TETRIS_MATRIX_HEIGHT \
+               or x < 0 \
+               or (x + tetrimino_width - 1) >= TETRIS_MATRIX_WIDTH
 
     def _put_curr_tetrimino_in_matrix(self):
         y_offset, x_offset = self.curr_tetrimino.position
         for y in range(self.curr_tetrimino.get_height()):
             for x in range(self.curr_tetrimino.get_width()):
-                self.matrix[y_offset + y][x_offset + x] = self.curr_tetrimino.get_shape_matrix()[y][x]
+                tetrimino_cell = self.curr_tetrimino.get_shape_matrix()[y][x]
+                if tetrimino_cell != ' ':
+                    self.matrix[y_offset + y][x_offset + x] = tetrimino_cell
 
     def _del_curr_tetrimino_from_matrix(self):
         y_offset, x_offset = self.curr_tetrimino.position
         for y in range(self.curr_tetrimino.get_height()):
             for x in range(self.curr_tetrimino.get_width()):
-                self.matrix[y_offset + y][x_offset + x] = ' '
+                tetrimino_cell = self.curr_tetrimino.get_shape_matrix()[y][x]
+                if tetrimino_cell != ' ':
+                    self.matrix[y_offset + y][x_offset + x] = ' '
 
     def _is_time_to_go_down(self, tick_start_time):
         down = (self.prev_activation_time is None  # is the beginning of the game
@@ -120,6 +164,29 @@ class Tetris():
     @staticmethod
     def _get_curr_time():
         return time.time() * 1000
+
+
+class Action(Enum):
+    LEFT = 0
+    DOWN = 1
+    RIGHT = 2
+    ROTATE = 3
+    QUIT = 4
+
+    @staticmethod
+    def get_action(character):
+        if character == ord('4'):
+            return Action.LEFT
+        elif character == ord('2'):
+            return Action.DOWN
+        elif character == ord('6'):
+            return Action.RIGHT
+        elif character == ord('5'):
+            return Action.ROTATE
+        elif character == ord('q') or character == ord('Q'):
+            return Action.QUIT
+        else:
+            return None
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ class Tetrimino():
         else:
             self.__shape = shape
 
+        self.__shape_matrix = self.__shape.get_matrix()
         self.__position = position
 
     @property
@@ -19,8 +20,9 @@ class Tetrimino():
     def position(self, new_position):
         self.__position = new_position
 
-    def get_shape_matrix(self):
-        return self.__shape.get_matrix()
+    def get_shape_matrix(self, rotated=False):
+        # TODO take rotated parameter into account
+        return self.__shape_matrix
 
     def get_width(self):
         return len(self.get_shape_matrix()[0])
@@ -35,3 +37,19 @@ class Tetrimino():
     def get_higher_x_coord(self):
         _, x = self.position
         return x + self.get_width()
+
+    def get_pos_left(self):
+        y, x = self.__position
+        return y, x - 1
+
+    def get_pos_right(self):
+        y, x = self.__position
+        return y, x + 1
+
+    def get_pos_down(self):
+        y, x = self.__position
+        return y + 1, x
+
+    def rotate(self):
+        # TODO
+        pass
