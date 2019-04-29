@@ -19,22 +19,19 @@ class Tetris():
     def __init__(self):
         self.state = dict()
         self.matrix = [[' ' for x in range(TETRIS_MATRIX_WIDTH)] for y in range(TETRIS_MATRIX_HEIGHT)]
-        self.prev_time = None
         self.prev_activation_time = None
         self.curr_tetrimino = None
-        self.game_over = False
+        self.exit = False
 
     def main(self, stdscr):
         self._print_screen(stdscr)
 
-        while not self.game_over:
+        while not self.exit:
             tick_start_time = Tetris._get_curr_time()
 
             actions = []
             user_action = Action.get_action(stdscr.getch())
-            if user_action == Action.QUIT:
-                break
-            elif user_action is not None:
+            if user_action is not None:
                 actions.append(user_action)
 
             if self._is_time_to_go_down(tick_start_time):
@@ -69,10 +66,11 @@ class Tetris():
         for action in actions:
             if self.curr_tetrimino is None:
                 self.curr_tetrimino = Tetrimino()
-                self.curr_tetrimino.position = (0, TETRIS_MATRIX_WIDTH // 2 - self.curr_tetrimino.get_width() // 2)
 
-                if self._colisions(self.curr_tetrimino.get_shape_matrix(), self.curr_tetrimino.position):
-                    self.game_over = True
+                if self._collisions(self.curr_tetrimino.get_shape_matrix(), self.curr_tetrimino.position):
+                    # If there is a collision just after putting a new tetrimino in the screen then it's game over
+                    # TODO implement a more friendly game over
+                    self.exit = True
                     return
                 else:
                     self._put_curr_tetrimino_in_matrix()
@@ -84,8 +82,7 @@ class Tetris():
                 # Remove curr tetrimino from matrix to calculate colisions of new position
                 self._del_curr_tetrimino_from_matrix()
 
-                if self._tetrimino_out_of_bounds(tetrimino_matrix, new_position) or self._colisions(tetrimino_matrix,
-                                                                                                    new_position):
+                if self._collisions(tetrimino_matrix, new_position):
                     self._put_curr_tetrimino_in_matrix()
 
                     if action == Action.DOWN:
@@ -95,18 +92,32 @@ class Tetris():
                     self.curr_tetrimino.position = new_position
                     self._put_curr_tetrimino_in_matrix()
 
+            elif action == Action.ROTATE:
+                # Remove curr tetrimino from matrix to calculate colisions of new position
+                self._del_curr_tetrimino_from_matrix()
+
+                rotated_tetrimino_matrix = self.curr_tetrimino.get_rotated_shape_matrix()
+                if not self._collisions(rotated_tetrimino_matrix, self.curr_tetrimino.position):
+                    self.curr_tetrimino.rotate()
+                    self._put_curr_tetrimino_in_matrix()
+
+            elif action == Action.QUIT:
+                self.exit = True
+
     def _calculate_new_tetrimino_position(self, action):
         if action == Action.LEFT:
-            new_position = self.curr_tetrimino.get_pos_left()
+            return self.curr_tetrimino.get_pos_left()
         elif action == Action.DOWN:
-            new_position = self.curr_tetrimino.get_pos_down()
+            return self.curr_tetrimino.get_pos_down()
         elif action == Action.RIGHT:
-            new_position = self.curr_tetrimino.get_pos_right()
+            return self.curr_tetrimino.get_pos_right()
         else:
-            new_position = self.curr_tetrimino.position
-        return new_position
+            return self.curr_tetrimino.position
 
-    def _colisions(self, tetrimino_matrix, new_position):
+    def _collisions(self, tetrimino_matrix, new_position):
+        if self._tetrimino_out_of_bounds(tetrimino_matrix, new_position):
+            return True
+
         y_offset, x_offset = new_position
 
         # Check if each cell in the tetrimino shape matrix doesn't clash with an existing tetrimino in the tetris matrix
@@ -153,12 +164,9 @@ class Tetris():
         return down
 
     def _sleep_if_possible(self, tick_start_time):
-        if self.prev_time is not None:
-            elapsed_time = tick_start_time - self.prev_time
-            if elapsed_time < TICK_DURATION:
-                time.sleep((TICK_DURATION-elapsed_time) / 1000)
-
-        self.prev_time = tick_start_time
+        elapsed_time = self._get_curr_time() - tick_start_time
+        if elapsed_time < TICK_DURATION:
+            time.sleep((TICK_DURATION - elapsed_time) / 1000)
 
     def _assert_window_size(self, stdscr):
         heigth, width = stdscr.getmaxyx()
@@ -194,7 +202,7 @@ class Action(Enum):
             return Action.DOWN
         elif character == ord('6'):
             return Action.RIGHT
-        elif character == ord('5'):
+        elif character == ord(' '):
             return Action.ROTATE
         elif character == ord('q') or character == ord('Q'):
             return Action.QUIT

@@ -8,4 +8,3 @@ MIN_WINDOW_HEIGTH = TETRIS_MATRIX_HEIGHT + 1
 TICK_DURATION = 1000/60  # duration of one iteration of the game loop: 1000 ms / 60 = 60 Frames Per Second
 
 GAME_SPEED = 300  # number of ms it takes tetrominoes to go down one row
-

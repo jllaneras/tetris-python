@@ -1,28 +1,28 @@
 from tetriminoshape import TetriminoShape
+from constants import TETRIS_MATRIX_WIDTH
 
 
 class Tetrimino():
 
-    def __init__(self, shape=None, position=None):
-        if shape is None:
-            self.__shape = TetriminoShape.get_random()
-        else:
-            self.__shape = shape
-
+    def __init__(self):
+        self.__shape = TetriminoShape.get_random()
         self.__shape_matrix = self.__shape.get_matrix()
-        self.__position = position
+        # The tetrimino is placed in the middle of the top row
+        self.__position = (0, TETRIS_MATRIX_WIDTH // 2 - self.get_width() // 2)
 
     @property
     def position(self):
         return self.__position
 
     @position.setter
-    def position(self, new_position):
-        self.__position = new_position
+    def position(self, position):
+        self.__position = position
 
-    def get_shape_matrix(self, rotated=False):
-        # TODO take rotated parameter into account
+    def get_shape_matrix(self):
         return self.__shape_matrix
+
+    def get_rotated_shape_matrix(self):
+        return self._calculate_rotated_matrix()
 
     def get_width(self):
         return len(self.get_shape_matrix()[0])
@@ -51,5 +51,15 @@ class Tetrimino():
         return y + 1, x
 
     def rotate(self):
-        # TODO
-        pass
+        self.__shape_matrix = self._calculate_rotated_matrix()
+
+    def _calculate_rotated_matrix(self):
+        rotated_matrix = []
+
+        for i in range(len(self.__shape_matrix[0])):
+            row = []
+            for j in range(len(self.__shape_matrix)):
+                row.append(self.__shape_matrix[len(self.__shape_matrix) - 1 - j][i])
+            rotated_matrix.append(row)
+
+        return rotated_matrix
