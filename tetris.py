@@ -28,30 +28,40 @@ class Tetris():
 
         while not self.exit:
             tick_start_time = Tetris._get_curr_time()
-
-            actions = []
-            user_action = Action.get_action(stdscr.getch())
-            if user_action is not None:
-                actions.append(user_action)
-
-            if self._is_time_to_go_down(tick_start_time):
-                actions.append(Action.DOWN)
+            actions = self.get_actions(stdscr.getch(), tick_start_time)
 
             self._update(actions)
-            self._sleep_if_possible(tick_start_time)
+            self._sleep_until_end_of_tick(tick_start_time)
 
             self._print_matrix(stdscr)
+
+    def get_actions(self, input_char, tick_start_time):
+        actions = []
+
+        user_action = Action.get_action(input_char)
+        if user_action is not None:
+            actions.append(user_action)
+
+        if self._is_time_to_go_down(tick_start_time):
+            actions.append(Action.DOWN)
+
+        return actions
 
     def _print_screen(self, stdscr):
         self._assert_window_size(stdscr)
         stdscr.clear()
         curses.curs_set(False)
         stdscr.nodelay(True)
+        stdscr.keypad(True)
 
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_GREEN)
         curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
 
-        stdscr.addstr(0, 0, '          TETRIS          ', curses.color_pair(1))
+        header = 'TETRIS'
+        header = (TETRIS_MATRIX_WIDTH + 2 - len(header)) // 2 * ' ' + header
+        header = header + (TETRIS_MATRIX_WIDTH + 2 - len(header)) * ' '
+
+        stdscr.addstr(0, 0, header, curses.color_pair(1))
 
         for y in range(TETRIS_MATRIX_HEIGHT):
             stdscr.addstr(y + 1, 0, ' ', curses.color_pair(1))
@@ -87,6 +97,7 @@ class Tetris():
 
                     if action == Action.DOWN:
                         # The current tetrimino reached the bottom
+                        self._remove_completed_rows()
                         self.curr_tetrimino = None
                 else:
                     self.curr_tetrimino.position = new_position
@@ -153,6 +164,21 @@ class Tetris():
                 if tetrimino_cell != ' ':
                     self.matrix[y_offset + y][x_offset + x] = ' '
 
+    def _remove_completed_rows(self):
+        y_offset, _ = self.curr_tetrimino.position
+
+        for y in range(y_offset, y_offset + self.curr_tetrimino.get_height()):
+            complete = True
+
+            for x in range(TETRIS_MATRIX_WIDTH):
+                if self.matrix[y][x] == ' ':
+                    complete = False
+                    break
+
+            if complete:
+                self.matrix.pop(y)
+                self.matrix.insert(0, [' ' for x in range(TETRIS_MATRIX_WIDTH)])
+
     def _is_time_to_go_down(self, tick_start_time):
         down = (self.prev_activation_time is None  # is the beginning of the game
                 or tick_start_time - self.prev_activation_time > GAME_SPEED  # time on the current row is up
@@ -163,7 +189,7 @@ class Tetris():
 
         return down
 
-    def _sleep_if_possible(self, tick_start_time):
+    def _sleep_until_end_of_tick(self, tick_start_time):
         elapsed_time = self._get_curr_time() - tick_start_time
         if elapsed_time < TICK_DURATION:
             time.sleep((TICK_DURATION - elapsed_time) / 1000)
