@@ -1,14 +1,13 @@
 import curses
 import time
-from enum import Enum
+
+from screen import Screen
+from inputaction import InputAction
 
 from tetrimino import Tetrimino
 from constants import (
     TETRIS_MATRIX_WIDTH,
     TETRIS_MATRIX_HEIGHT,
-    MATRIX_POS,
-    MIN_WINDOW_HEIGTH,
-    MIN_WINDOW_WIDTH,
     TICK_DURATION,
     GAME_SPEED
 )
@@ -17,60 +16,35 @@ from constants import (
 class Tetris():
 
     def __init__(self):
-        self.state = dict()
+        self.__screen = Screen()
         self.matrix = [[' ' for x in range(TETRIS_MATRIX_WIDTH)] for y in range(TETRIS_MATRIX_HEIGHT)]
         self.prev_activation_time = None
         self.curr_tetrimino = None
         self.exit = False
 
     def main(self, stdscr):
-        self._print_screen(stdscr)
+        self.__screen.print_tetris(stdscr)
 
         while not self.exit:
             tick_start_time = Tetris._get_curr_time()
-            actions = self.get_actions(stdscr.getch(), tick_start_time)
+            actions = self.get_input_actions(stdscr.getch(), tick_start_time)
 
             self._update(actions)
             self._sleep_until_end_of_tick(tick_start_time)
 
-            self._print_matrix(stdscr)
+            self.__screen.print_tetris_matrix(self.matrix, stdscr)
 
-    def get_actions(self, input_char, tick_start_time):
+    def get_input_actions(self, input_char, tick_start_time):
         actions = []
 
-        user_action = Action.get_action(input_char)
+        user_action = InputAction.get_action(input_char)
         if user_action is not None:
             actions.append(user_action)
 
         if self._is_time_to_go_down(tick_start_time):
-            actions.append(Action.DOWN)
+            actions.append(InputAction.DOWN)
 
         return actions
-
-    def _print_screen(self, stdscr):
-        self._assert_window_size(stdscr)
-        stdscr.clear()
-        curses.curs_set(False)
-        stdscr.nodelay(True)
-        stdscr.keypad(True)
-
-        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_GREEN)
-        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
-
-        header = 'TETRIS'
-        header = (TETRIS_MATRIX_WIDTH + 2 - len(header)) // 2 * ' ' + header
-        header = header + (TETRIS_MATRIX_WIDTH + 2 - len(header)) * ' '
-
-        stdscr.addstr(0, 0, header, curses.color_pair(1))
-
-        for y in range(TETRIS_MATRIX_HEIGHT):
-            stdscr.addstr(y + 1, 0, ' ', curses.color_pair(1))
-            stdscr.addstr(y + 1, TETRIS_MATRIX_WIDTH + 1, ' ', curses.color_pair(1))
-
-        for x in range(TETRIS_MATRIX_WIDTH + 2):
-            stdscr.addstr(TETRIS_MATRIX_HEIGHT + 1, x, ' ', curses.color_pair(1))
-
-        self._print_matrix(stdscr)
 
     def _update(self, actions):
         for action in actions:
@@ -85,7 +59,7 @@ class Tetris():
                 else:
                     self._put_curr_tetrimino_in_matrix()
 
-            if action == Action.DOWN or action == Action.LEFT or action == Action.RIGHT:
+            if action == InputAction.DOWN or action == InputAction.LEFT or action == InputAction.RIGHT:
                 new_position = self._calculate_new_tetrimino_position(action)
                 tetrimino_matrix = self.curr_tetrimino.get_shape_matrix()
 
@@ -95,7 +69,7 @@ class Tetris():
                 if self._collisions(tetrimino_matrix, new_position):
                     self._put_curr_tetrimino_in_matrix()
 
-                    if action == Action.DOWN:
+                    if action == InputAction.DOWN:
                         # The current tetrimino reached the bottom
                         self._remove_completed_rows()
                         self.curr_tetrimino = None
@@ -103,7 +77,7 @@ class Tetris():
                     self.curr_tetrimino.position = new_position
                     self._put_curr_tetrimino_in_matrix()
 
-            elif action == Action.ROTATE:
+            elif action == InputAction.ROTATE:
                 # Remove curr tetrimino from matrix to calculate colisions of new position
                 self._del_curr_tetrimino_from_matrix()
 
@@ -112,15 +86,15 @@ class Tetris():
                     self.curr_tetrimino.rotate()
                     self._put_curr_tetrimino_in_matrix()
 
-            elif action == Action.QUIT:
+            elif action == InputAction.QUIT:
                 self.exit = True
 
     def _calculate_new_tetrimino_position(self, action):
-        if action == Action.LEFT:
+        if action == InputAction.LEFT:
             return self.curr_tetrimino.get_pos_left()
-        elif action == Action.DOWN:
+        elif action == InputAction.DOWN:
             return self.curr_tetrimino.get_pos_down()
-        elif action == Action.RIGHT:
+        elif action == InputAction.RIGHT:
             return self.curr_tetrimino.get_pos_right()
         else:
             return self.curr_tetrimino.position
@@ -194,46 +168,9 @@ class Tetris():
         if elapsed_time < TICK_DURATION:
             time.sleep((TICK_DURATION - elapsed_time) / 1000)
 
-    def _assert_window_size(self, stdscr):
-        heigth, width = stdscr.getmaxyx()
-        if heigth < MIN_WINDOW_HEIGTH or width < MIN_WINDOW_WIDTH:
-            raise Exception('The window is too small')
-
-    def _print_matrix(self, stdscr):
-        y_start, x_start = MATRIX_POS
-
-        for y, row in enumerate(self.matrix):
-            for x, cell in enumerate(row):
-                stdscr.addstr(y_start + y, x_start + x, cell, curses.color_pair(2))
-
-        stdscr.refresh()
-
     @staticmethod
     def _get_curr_time():
         return time.time() * 1000
-
-
-class Action(Enum):
-    LEFT = 0
-    DOWN = 1
-    RIGHT = 2
-    ROTATE = 3
-    QUIT = 4
-
-    @staticmethod
-    def get_action(character):
-        if  character == curses.KEY_LEFT:
-            return Action.LEFT
-        elif character == curses.KEY_DOWN:
-            return Action.DOWN
-        elif character == curses.KEY_RIGHT:
-            return Action.RIGHT
-        elif character in [ord(' '), curses.KEY_UP]:
-            return Action.ROTATE
-        elif character in [ord('q'), ord('Q')]:
-            return Action.QUIT
-        else:
-            return None
 
 
 if __name__ == "__main__":
