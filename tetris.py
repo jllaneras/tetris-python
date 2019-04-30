@@ -48,38 +48,33 @@ class Tetris():
         for action in actions:
             if self.curr_tetrimino is None:
                 self.curr_tetrimino = Tetrimino()
+                start_position = self._matrix.get_start_position(self.curr_tetrimino)
 
-                if self._matrix.collisions(self.curr_tetrimino.get_shape_matrix(), self.curr_tetrimino.position):
+                if self._matrix.collisions_found(self.curr_tetrimino, start_position):
                     # If there is a collision just after putting a new tetrimino in the screen then it's game over
                     # TODO implement a more friendly game over
                     self.exit = True
                     return
                 else:
+                    self.curr_tetrimino.position = start_position
                     self._matrix.insert_tetrimino(self.curr_tetrimino)
 
-            if action == InputAction.DOWN or action == InputAction.LEFT or action == InputAction.RIGHT:
+            if action in [InputAction.DOWN, InputAction.LEFT, InputAction.RIGHT]:
                 new_position = self._calculate_new_tetrimino_position(action)
 
-                # Remove curr tetrimino from matrix to calculate colisions of new position
-                self._matrix.remove_tetrimino(self.curr_tetrimino)
-
-                if self._matrix.collisions(self.curr_tetrimino.get_shape_matrix(), new_position):
-                    self._matrix.insert_tetrimino(self.curr_tetrimino)
-
+                if self._matrix.collisions_found(self.curr_tetrimino, new_position):
                     if action == InputAction.DOWN:
                         # The current tetrimino reached the bottom
                         self._matrix.remove_completed_rows(self.curr_tetrimino)
                         self.curr_tetrimino = None
                 else:
+                    self._matrix.remove_tetrimino(self.curr_tetrimino)
                     self.curr_tetrimino.position = new_position
                     self._matrix.insert_tetrimino(self.curr_tetrimino)
 
             elif action == InputAction.ROTATE:
-                # Remove curr tetrimino from matrix to calculate colisions of new position
-                self._matrix.remove_tetrimino(self.curr_tetrimino)
-
-                rotated_tetrimino_matrix = self.curr_tetrimino.get_rotated_shape_matrix()
-                if not self._matrix.collisions(rotated_tetrimino_matrix, self.curr_tetrimino.position):
+                if not self._matrix.collisions_found(self.curr_tetrimino, self.curr_tetrimino.position, rotated=True):
+                    self._matrix.remove_tetrimino(self.curr_tetrimino)
                     self.curr_tetrimino.rotate()
                     self._matrix.insert_tetrimino(self.curr_tetrimino)
 

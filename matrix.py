@@ -1,5 +1,6 @@
 from config import TETRIS_MATRIX_HEIGHT, TETRIS_MATRIX_WIDTH
 
+
 class Matrix():
 
     def __init__(self):
@@ -8,12 +9,30 @@ class Matrix():
     def get_matrix(self):
         return self._matrix;
 
-    def collisions(self, tetrimino_matrix, new_position):
+    def get_start_position(self, tetrimino):
+        return 0, TETRIS_MATRIX_WIDTH // 2 - tetrimino.get_width() // 2
+
+    def collisions_found(self, tetrimino, new_position, rotated=False):
+        if tetrimino.is_visible():
+            # Remove tetrimino from matrix to check for collisions if it's moved to new position and/or its shape is
+            # changed (when rotated is True)
+            self.remove_tetrimino(tetrimino)
+
+        collisions_found = self._collisions_found(tetrimino, new_position, rotated)
+
+        if tetrimino.is_visible():
+            # Put back tetrimino in matrix after collisions have been calculated for its new position or shape
+            self.insert_tetrimino(tetrimino)
+
+        return collisions_found
+
+    def _collisions_found(self,  tetrimino, new_position, rotated):
+        tetrimino_matrix = tetrimino.get_shape_matrix(rotated)
+
         if self.tetrimino_out_of_bounds(tetrimino_matrix, new_position):
             return True
 
         y_offset, x_offset = new_position
-
         # Check if each cell in the tetrimino shape matrix doesn't clash with an existing tetrimino in the tetris matrix
         for y in range(len(tetrimino_matrix)):
             for x in range(len(tetrimino_matrix[0])):

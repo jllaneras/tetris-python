@@ -8,7 +8,7 @@ class Tetrimino():
         self.__shape = TetriminoShape.get_random()
         self.__shape_matrix = self.__shape.get_matrix()
         # The tetrimino is placed in the middle of the top row
-        self.__position = (0, TETRIS_MATRIX_WIDTH // 2 - self.get_width() // 2)
+        self.__position = None
 
     @property
     def position(self):
@@ -18,11 +18,14 @@ class Tetrimino():
     def position(self, position):
         self.__position = position
 
-    def get_shape_matrix(self):
-        return self.__shape_matrix
+    def is_visible(self):
+        return self.__position is not None
 
-    def get_rotated_shape_matrix(self):
-        return self._calculate_rotated_matrix()
+    def get_shape_matrix(self, rotated=False):
+        if rotated:
+            return self._calculate_rotated_matrix()
+        else:
+            return self.__shape_matrix
 
     def get_width(self):
         return len(self.get_shape_matrix()[0])
