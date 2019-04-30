@@ -222,15 +222,15 @@ class Action(Enum):
 
     @staticmethod
     def get_action(character):
-        if character == ord('4'):
+        if  character == curses.KEY_LEFT:
             return Action.LEFT
-        elif character == ord('2'):
+        elif character == curses.KEY_DOWN:
             return Action.DOWN
-        elif character == ord('6'):
+        elif character == curses.KEY_RIGHT:
             return Action.RIGHT
-        elif character == ord(' '):
+        elif character in [ord(' '), curses.KEY_UP]:
             return Action.ROTATE
-        elif character == ord('q') or character == ord('Q'):
+        elif character in [ord('q'), ord('Q')]:
             return Action.QUIT
         else:
             return None
