@@ -20,21 +20,25 @@ class Tetris():
         self._matrix = Matrix()
         self._prev_activation_time = None
         self._curr_tetrimino = None
+        self._score = 0
         self._exit = False
 
     def main(self, stdscr):
-        self._screen.print_tetris(stdscr)
+        self._screen.init_tetris(stdscr)
 
         while not self._exit:
             tick_start_time = Tetris._get_curr_time()
-            actions = self.get_input_actions(stdscr.getch(), tick_start_time)
+            actions = self._get_input_actions(stdscr.getch(), tick_start_time)
 
             self._update(actions)
             self._sleep_until_end_of_tick(tick_start_time)
 
-            self._screen.print_tetris_matrix(self._matrix.get_matrix(), stdscr)
+            self._screen.render_tetris(self._matrix.get_matrix(), self._score, stdscr)
 
-    def get_input_actions(self, input_char, tick_start_time):
+    def get_score(self):
+        return self._score
+
+    def _get_input_actions(self, input_char, tick_start_time):
         actions = []
 
         user_action = InputAction.get_action(input_char)
@@ -51,7 +55,6 @@ class Tetris():
             if self._curr_tetrimino is None:
                 self._curr_tetrimino, game_over = self._matrix.insert_new_tetrimino()
                 if game_over:
-                    # TODO implement a more friendly game over
                     self._exit = True
                     break
 
@@ -60,7 +63,8 @@ class Tetris():
 
                 if not success and action == InputAction.DOWN:
                     # The tetrimino could not be moved down, which means it reached the bottom
-                    self._matrix.remove_completed_rows(self._curr_tetrimino)
+                    score = self._matrix.remove_completed_rows(self._curr_tetrimino)
+                    self._score += score
                     self._curr_tetrimino = None
 
             elif action == InputAction.ROTATE:
@@ -90,5 +94,10 @@ class Tetris():
         return time.time() * 1000
 
 
-if __name__ == "__main__":
-    curses.wrapper(Tetris().main)
+if __name__ == '__main__':
+    tetris = Tetris()
+    curses.wrapper(tetris.main)
+    print('===========')
+    print('Game Over')
+    print('Your score is: {}'.format(tetris.get_score()))
+    print('===========')

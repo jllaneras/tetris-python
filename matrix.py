@@ -120,6 +120,7 @@ class Matrix():
     def remove_completed_rows(self, tetrimino):
         y_start, _ = tetrimino.position
         y_end = y_start + tetrimino.get_height()
+        score = 0;
 
         for y in range(y_start, y_end):
             complete = True
@@ -132,3 +133,6 @@ class Matrix():
             if complete:
                 self._matrix.pop(y)
                 self._matrix.insert(0, [' ' for x in range(TETRIS_MATRIX_WIDTH)])
+                score += TETRIS_MATRIX_WIDTH
+
+        return score
