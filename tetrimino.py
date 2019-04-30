@@ -5,27 +5,27 @@ from config import TETRIS_MATRIX_WIDTH
 class Tetrimino():
 
     def __init__(self):
-        self.__shape = TetriminoShape.get_random()
-        self.__shape_matrix = self.__shape.get_matrix()
+        self._shape = TetriminoShape.get_random()
+        self._shape_matrix = self._shape.get_matrix()
         # The tetrimino is placed in the middle of the top row
-        self.__position = None
+        self._position = None
 
     @property
     def position(self):
-        return self.__position
+        return self._position
 
     @position.setter
     def position(self, position):
-        self.__position = position
+        self._position = position
 
-    def is_visible(self):
-        return self.__position is not None
+    def in_matrix(self):
+        return self._position is not None
 
     def get_shape_matrix(self, rotated=False):
         if rotated:
             return self._calculate_rotated_matrix()
         else:
-            return self.__shape_matrix
+            return self._shape_matrix
 
     def get_width(self):
         return len(self.get_shape_matrix()[0])
@@ -41,28 +41,16 @@ class Tetrimino():
         _, x = self.position
         return x + self.get_width()
 
-    def get_pos_left(self):
-        y, x = self.__position
-        return y, x - 1
-
-    def get_pos_right(self):
-        y, x = self.__position
-        return y, x + 1
-
-    def get_pos_down(self):
-        y, x = self.__position
-        return y + 1, x
-
     def rotate(self):
-        self.__shape_matrix = self._calculate_rotated_matrix()
+        self._shape_matrix = self._calculate_rotated_matrix()
 
     def _calculate_rotated_matrix(self):
         rotated_matrix = []
 
-        for i in range(len(self.__shape_matrix[0])):
+        for i in range(len(self._shape_matrix[0])):
             row = []
-            for j in range(len(self.__shape_matrix)):
-                row.append(self.__shape_matrix[len(self.__shape_matrix) - 1 - j][i])
+            for j in range(len(self._shape_matrix)):
+                row.append(self._shape_matrix[len(self._shape_matrix) - 1 - j][i])
             rotated_matrix.append(row)
 
         return rotated_matrix
