@@ -5,7 +5,7 @@ from screen import Screen
 from inputaction import InputAction
 
 from tetrimino import Tetrimino
-from constants import (
+from config import (
     TETRIS_MATRIX_WIDTH,
     TETRIS_MATRIX_HEIGHT,
     TICK_DURATION,

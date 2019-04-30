@@ -1,5 +1,5 @@
 from tetriminoshape import TetriminoShape
-from constants import TETRIS_MATRIX_WIDTH
+from config import TETRIS_MATRIX_WIDTH
 
 
 class Tetrimino():
