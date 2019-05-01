@@ -27,11 +27,17 @@ class Tetrimino():
         else:
             return self._shape_matrix
 
-    def get_width(self):
-        return len(self.get_shape_matrix()[0])
+    def get_width(self, rotated=False):
+        if rotated:
+            return self.get_height()
+        else:
+            return len(self.get_shape_matrix()[0])
 
-    def get_height(self):
-        return len(self.get_shape_matrix())
+    def get_height(self, rotated=False):
+        if rotated:
+            return self.get_width()
+        else:
+            return len(self.get_shape_matrix())
 
     def get_higher_y_coord(self):
         y, _ = self.position
@@ -47,10 +53,10 @@ class Tetrimino():
     def _calculate_rotated_matrix(self):
         rotated_matrix = []
 
-        for i in range(len(self._shape_matrix[0])):
+        for i in range(self.get_width()):
             row = []
-            for j in range(len(self._shape_matrix)):
-                row.append(self._shape_matrix[len(self._shape_matrix) - 1 - j][i])
+            for j in range(self.get_height()):
+                row.append(self._shape_matrix[self.get_height() - 1 - j][i])
             rotated_matrix.append(row)
 
         return rotated_matrix

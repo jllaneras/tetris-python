@@ -28,28 +28,25 @@ class Matrix():
         return collisions_found
 
     def _collisions_found(self, tetrimino, new_position, rotated):
-        tetrimino_matrix = tetrimino.get_shape_matrix(rotated)
-
-        if self.tetrimino_out_of_bounds(tetrimino_matrix, new_position):
+        if self.tetrimino_out_of_bounds(tetrimino, new_position, rotated):
             return True
 
+        tetrimino_matrix = tetrimino.get_shape_matrix(rotated)
         y_offset, x_offset = new_position
         # Check if each cell in the tetrimino shape matrix doesn't clash with an existing tetrimino in the tetris matrix
-        for y in range(len(tetrimino_matrix)):
-            for x in range(len(tetrimino_matrix[0])):
+        for y in range(tetrimino.get_height(rotated)):
+            for x in range(tetrimino.get_width(rotated)):
                 if tetrimino_matrix[y][x] != ' ' and self._matrix[y_offset + y][x_offset + x] != ' ':
                     return True
 
         return False
 
-    def tetrimino_out_of_bounds(self, tetrimino_matrix, new_position):
+    def tetrimino_out_of_bounds(self, tetrimino, new_position, rotated):
         y, x = new_position
-        tetrimino_height = len(tetrimino_matrix)
-        tetrimino_width = len(tetrimino_matrix[0])
 
-        return (y + tetrimino_height - 1) >= TETRIS_MATRIX_HEIGHT \
+        return (y + tetrimino.get_height(rotated) - 1) >= TETRIS_MATRIX_HEIGHT \
                or x < 0 \
-               or (x + tetrimino_width - 1) >= TETRIS_MATRIX_WIDTH
+               or (x + tetrimino.get_width(rotated) - 1) >= TETRIS_MATRIX_WIDTH
 
     def insert_new_tetrimino(self):
         new_tetrimino = Tetrimino()
