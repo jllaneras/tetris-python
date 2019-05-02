@@ -7,7 +7,6 @@ class Tetrimino():
     def __init__(self):
         self._shape = TetriminoShape.get_random()
         self._shape_matrix = self._shape.get_matrix()
-        # The tetrimino is placed in the middle of the top row
         self._position = None
 
     @property
