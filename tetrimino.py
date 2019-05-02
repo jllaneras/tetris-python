@@ -1,15 +1,18 @@
 from tetriminoshape import TetriminoShape
 
-_TETRIMINO_CELL_CHAR = '\u2593'
+_TETRIMINO_CELL_STRING = '\u2593\u2593'
 
 
 class TetriminoCell():
     def __init__(self, color):
-        self.char = _TETRIMINO_CELL_CHAR
+        self.str = _TETRIMINO_CELL_STRING
         self.color = color
 
+    width = len(_TETRIMINO_CELL_STRING)
+    height = 1
+
     def __repr__(self):
-        return 'char=%s, color=%s' % (self.char, self.color)
+        return '[str=%s, color=%s]' % (self.str, self.color)
 
 class Tetrimino():
 

@@ -1,4 +1,4 @@
-TETRIS_MATRIX_HEIGHT = 16
+TETRIS_MATRIX_HEIGHT = 24 
 TETRIS_MATRIX_WIDTH = 16
 
 # Duration of one iteration of the game loop. For example: 1000 ms / 60 = 60 FPS
