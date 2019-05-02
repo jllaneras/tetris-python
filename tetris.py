@@ -6,7 +6,6 @@ import time
 from screen import Screen
 from inputaction import InputAction
 from matrix import Matrix
-from tetrimino import Tetrimino
 from config import (
     TICK_DURATION,
     GAME_SPEED

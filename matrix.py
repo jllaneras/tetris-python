@@ -6,7 +6,7 @@ from inputaction import InputAction
 class Matrix():
 
     def __init__(self):
-        self._matrix = [[' ' for x in range(TETRIS_MATRIX_WIDTH)] for y in range(TETRIS_MATRIX_HEIGHT)]
+        self._matrix = [[None for x in range(TETRIS_MATRIX_WIDTH)] for y in range(TETRIS_MATRIX_HEIGHT)]
 
     def get_matrix(self):
         return self._matrix
@@ -31,12 +31,12 @@ class Matrix():
         if self.tetrimino_out_of_bounds(tetrimino, new_position, rotated):
             return True
 
-        tetrimino_matrix = tetrimino.get_shape_matrix(rotated)
+        tetrimino_matrix = tetrimino.get_cell_matrix(rotated)
         y_offset, x_offset = new_position
         # Check if each cell in the tetrimino shape matrix doesn't clash with an existing tetrimino in the tetris matrix
         for y in range(tetrimino.get_height(rotated)):
             for x in range(tetrimino.get_width(rotated)):
-                if tetrimino_matrix[y][x] != ' ' and self._matrix[y_offset + y][x_offset + x] != ' ':
+                if tetrimino_matrix[y][x] is not None and self._matrix[y_offset + y][x_offset + x] is not None:
                     return True
 
         return False
@@ -66,8 +66,8 @@ class Matrix():
 
         for y in range(tetrimino.get_height()):
             for x in range(tetrimino.get_width()):
-                tetrimino_cell = tetrimino.get_shape_matrix()[y][x]
-                if tetrimino_cell != ' ':
+                tetrimino_cell = tetrimino.get_cell_matrix()[y][x]
+                if tetrimino_cell is not None:
                     self._matrix[y_offset + y][x_offset + x] = tetrimino_cell
 
     def remove_tetrimino(self, tetrimino):
@@ -75,9 +75,9 @@ class Matrix():
 
         for y in range(tetrimino.get_height()):
             for x in range(tetrimino.get_width()):
-                tetrimino_cell = tetrimino.get_shape_matrix()[y][x]
-                if tetrimino_cell != ' ':
-                    self._matrix[y_offset + y][x_offset + x] = ' '
+                tetrimino_cell = tetrimino.get_cell_matrix()[y][x]
+                if tetrimino_cell is not None:
+                    self._matrix[y_offset + y][x_offset + x] = None
 
     def move_tetrimino(self, tetrimino, action):
         success = False
@@ -117,19 +117,19 @@ class Matrix():
     def remove_completed_rows(self, tetrimino):
         y_start, _ = tetrimino.position
         y_end = y_start + tetrimino.get_height()
-        score = 0;
+        score = 0
 
         for y in range(y_start, y_end):
             complete = True
 
             for x in range(TETRIS_MATRIX_WIDTH):
-                if self._matrix[y][x] == ' ':
+                if self._matrix[y][x] is None:
                     complete = False
                     break
 
             if complete:
                 self._matrix.pop(y)
-                self._matrix.insert(0, [' ' for x in range(TETRIS_MATRIX_WIDTH)])
+                self._matrix.insert(0, [None for x in range(TETRIS_MATRIX_WIDTH)])
                 score += TETRIS_MATRIX_WIDTH
 
         return score
