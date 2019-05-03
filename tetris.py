@@ -26,7 +26,7 @@ class Tetris():
     def __init__(self):
         self._screen = Screen()
         self._matrix = Matrix()
-        self._prev_activation_time = None
+        self._prev_activation_time = self._get_curr_time()
         self._curr_tetrimino = Tetrimino()
         self._next_tetrimino = Tetrimino()
         self._last_score = 0
@@ -38,10 +38,15 @@ class Tetris():
 
         while not self._exit:
             tick_start_time = Tetris._get_curr_time()
-            actions = self._get_input_actions(stdscr.getch(), tick_start_time)
+            actions = self._get_input(stdscr.getch(), tick_start_time)
 
-            self._update(actions)
-            self._sleep_until_end_of_tick(tick_start_time)
+            if not self._curr_tetrimino.in_matrix():
+                game_over = self._matrix.insert_new_tetrimino(self._curr_tetrimino)
+                if game_over:
+                    self._exit = True
+            else:
+                self._process_input(actions)
+                self._sleep_until_end_of_tick(tick_start_time)
 
             self._screen.render_tetris(
                 self._matrix.get_matrix(),
@@ -52,7 +57,7 @@ class Tetris():
     def get_score(self):
         return self._total_score
 
-    def _get_input_actions(self, input_char, tick_start_time):
+    def _get_input(self, input_char, tick_start_time):
         actions = []
 
         user_action = InputAction.get_action(input_char)
@@ -64,14 +69,8 @@ class Tetris():
 
         return actions
 
-    def _update(self, actions):
+    def _process_input(self, actions):
         for action in actions:
-            if not self._curr_tetrimino.in_matrix():
-                game_over = self._matrix.insert_new_tetrimino(self._curr_tetrimino)
-                if game_over:
-                    self._exit = True
-                    break
-
             if action in [InputAction.DOWN, InputAction.LEFT, InputAction.RIGHT]:
                 success = self._matrix.move_tetrimino(self._curr_tetrimino, action)
 
@@ -95,8 +94,7 @@ class Tetris():
                 break
 
     def _tetrimino_should_go_down(self, tick_start_time):
-        go_down = (not self._curr_tetrimino.in_matrix()  # there is not a tetrimino in the screen
-                or tick_start_time - self._prev_activation_time > GAME_SPEED)  # time on the current row is up
+        go_down = (tick_start_time - self._prev_activation_time) > GAME_SPEED  # time on the current row is up
 
         if go_down:
             self._prev_activation_time = tick_start_time

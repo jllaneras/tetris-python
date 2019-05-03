@@ -1,6 +1,7 @@
 import curses
 
 from tetrimino import TetriminoCell
+from tetriminoshape import TetriminoShape
 from config import (
     TETRIS_MATRIX_WIDTH,
     TETRIS_MATRIX_HEIGHT
@@ -127,8 +128,10 @@ class Screen():
         # Clear next tetrimino area
         offset = (4, TETRIS_BOX_WIDTH + 2)
 
-        for y in range(2):
-            for x in range(4):
+        max_tetrimino_height = len(TetriminoShape.get_biggest().get_matrix())
+        max_tetrimino_width = len(TetriminoShape.get_biggest().get_matrix()[0])
+        for y in range(max_tetrimino_height):
+            for x in range(max_tetrimino_width):
                 screen_y, screen_x = self._tetrimino_cell_pos_to_screen_pos(offset, y, x)
                 stdscr.addstr(screen_y, screen_x, ' ' * TetriminoCell.width, curses.color_pair(1))
 

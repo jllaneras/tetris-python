@@ -20,6 +20,10 @@ class TetriminoShape(Enum):
     def get_random():
         return TetriminoShape(random.randrange(len(TetriminoShape)))
 
+    @staticmethod
+    def get_biggest():
+        return TetriminoShape.I
+
     def get_matrix(self):
         return _SHAPE_MATRICES[self]
 
@@ -34,15 +38,15 @@ _SHAPE_MATRICES[TetriminoShape.I] = [
 ]
 
 _SHAPE_MATRICES[TetriminoShape.J] = [
-    list('X  '),
+    list('   '),
     list('XXX'),
-    list('   ')
+    list('  X')
 ]
 
 _SHAPE_MATRICES[TetriminoShape.L] = [
-    list('  X'),
+    list('   '),
     list('XXX'),
-    list('   ')
+    list('X  ')
 ]
 
 _SHAPE_MATRICES[TetriminoShape.S] = [
@@ -58,9 +62,9 @@ _SHAPE_MATRICES[TetriminoShape.Z] = [
 ]
 
 _SHAPE_MATRICES[TetriminoShape.T] = [
-    list(' X '),
+    list('   '),
     list('XXX'),
-    list('   ')
+    list(' X ')
 ]
 
 _SHAPE_MATRICES[TetriminoShape.O] = [
