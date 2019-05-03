@@ -117,6 +117,6 @@ if __name__ == '__main__':
     tetris = Tetris()
     curses.wrapper(tetris.main)
     print('===========')
-    print('Game Over')
-    print('Your score is: {}'.format(tetris.get_score()))
+    print('GAME OVER')
+    print('Your final score is: {}'.format(tetris.get_score()))
     print('===========')
