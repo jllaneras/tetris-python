@@ -27,37 +27,47 @@ class TetriminoShape(Enum):
         return _SHAPE_COLORS[self]
 
 _SHAPE_MATRICES[TetriminoShape.I] = [
-    list('XXXX')
+    list('    '),
+    list('    '),
+    list('XXXX'),
+    list('    ')
 ]
 
 _SHAPE_MATRICES[TetriminoShape.J] = [
     list('X  '),
-    list('XXX')
+    list('XXX'),
+    list('   ')
 ]
 
 _SHAPE_MATRICES[TetriminoShape.L] = [
     list('  X'),
-    list('XXX')
+    list('XXX'),
+    list('   ')
 ]
 
 _SHAPE_MATRICES[TetriminoShape.S] = [
+    list('   '),
     list(' XX'),
     list('XX ')
 ]
 
 _SHAPE_MATRICES[TetriminoShape.Z] = [
+    list('   '),
     list('XX '),
     list(' XX')
 ]
 
 _SHAPE_MATRICES[TetriminoShape.T] = [
     list(' X '),
-    list('XXX')
+    list('XXX'),
+    list('   ')
 ]
 
 _SHAPE_MATRICES[TetriminoShape.O] = [
-    list('XX'),
-    list('XX')
+    list('    '),
+    list(' XX '),
+    list(' XX '),
+    list('    ')
 ]
 
 _SHAPE_COLORS[TetriminoShape.I] = curses.COLOR_CYAN

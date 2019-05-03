@@ -57,7 +57,9 @@ class Matrix():
             complete = True
 
             for x in range(TETRIS_MATRIX_WIDTH):
-                if self._matrix[y][x] is None:
+                # The call to _coord_out_of_bounds is needed because the matrix of the tetrimino may have empty rows
+                # TODO find a more elegant way to do this
+                if self._coord_out_of_bounds(y, x) or self._matrix[y][x] is None:
                     complete = False
                     break
 
@@ -69,6 +71,7 @@ class Matrix():
         return removed_rows
 
     def _collisions_found(self, tetrimino, new_position, rotated=False):
+        # TODO find a more elegant way to check for collisions
         if tetrimino.in_matrix():
             # Remove the tetrimino from the matrix to be able to calculate collisions for its new position/shape
             self._remove_tetrimino(tetrimino)
@@ -96,11 +99,19 @@ class Matrix():
         return False
 
     def _tetrimino_out_of_bounds(self, tetrimino, new_position, rotated):
-        y, x = new_position
+        tetrimino_matrix = tetrimino.get_cell_matrix(rotated)
+        y_offset, x_offset = new_position
 
-        return (y + tetrimino.get_height(rotated) - 1) >= TETRIS_MATRIX_HEIGHT \
-               or x < 0 \
-               or (x + tetrimino.get_width(rotated) - 1) >= TETRIS_MATRIX_WIDTH
+        # TODO this loop keeps repeating
+        for y in range(tetrimino.get_height(rotated)):
+            for x in range(tetrimino.get_width(rotated)):
+                if tetrimino_matrix[y][x] is not None and self._coord_out_of_bounds(y_offset + y, x_offset + x):
+                    return True
+
+        return False
+
+    def _coord_out_of_bounds(self, y, x):
+        return y >= TETRIS_MATRIX_HEIGHT or y < 0 or x >= TETRIS_MATRIX_WIDTH or x < 0
 
     def _insert_tetrimino(self, tetrimino):
         y_offset, x_offset = tetrimino.position
