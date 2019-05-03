@@ -40,14 +40,13 @@ class Screen():
         stdscr.refresh()
 
     def render_tetris(self, tetris_matrix, score, stdscr):
-        y_offset, x_offset = TETRIS_MATRIX_POS
-
         for y, row in enumerate(tetris_matrix):
             for x, cell in enumerate(row):
+                screen_y, screen_x = self._tetrimino_cell_pos_to_screen_pos(TETRIS_MATRIX_POS, y, x)
                 if cell is not None:
-                    stdscr.addstr(y_offset + y*TetriminoCell.height, x_offset + x*TetriminoCell.width, cell.str, curses.color_pair(cell.color))
+                    stdscr.addstr(screen_y, screen_x, cell.str, curses.color_pair(cell.color))
                 else:
-                    stdscr.addstr(y_offset + y*TetriminoCell.height, x_offset + x*TetriminoCell.width, ' ' * TetriminoCell.width, curses.color_pair(1))
+                    stdscr.addstr(screen_y, screen_x, ' ' * TetriminoCell.width, curses.color_pair(1))
 
         self._render_tetris_score(stdscr, score)
 
@@ -107,3 +106,9 @@ class Screen():
 
         for i, line in enumerate(help_lines):
             stdscr.addstr(y + i, x, line, curses.color_pair(curses.COLOR_GREEN))
+
+    def _tetrimino_cell_pos_to_screen_pos(self, screen_offset, matrix_y, matrix_x):
+        y_offset, x_offset = screen_offset
+        screen_y = y_offset + matrix_y * TetriminoCell.height
+        screen_x = x_offset + matrix_x * TetriminoCell.width
+        return screen_y, screen_x
