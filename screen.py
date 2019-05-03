@@ -32,14 +32,14 @@ class Screen():
 
         self._init_curses(stdscr)
 
-        self._render_tetris_score(0, stdscr)
+        self._render_tetris_score(0, 0, stdscr)
         self._render_lateral_walls(stdscr)
         self._render_bottom_wall(stdscr)
         self._render_help(stdscr)
 
         stdscr.refresh()
 
-    def render_tetris(self, tetris_matrix, score, next_tetrimino, stdscr):
+    def render_tetris(self, tetris_matrix, total_score, last_score, next_tetrimino, stdscr):
         for y, row in enumerate(tetris_matrix):
             for x, cell in enumerate(row):
                 screen_y, screen_x = self._tetrimino_cell_pos_to_screen_pos(TETRIS_MATRIX_POS, y, x)
@@ -48,7 +48,7 @@ class Screen():
                 else:
                     stdscr.addstr(screen_y, screen_x, ' ' * TetriminoCell.width, curses.color_pair(1))
 
-        self._render_tetris_score(score, stdscr)
+        self._render_tetris_score(total_score, last_score, stdscr)
 
         self._render_next_tetrimino(next_tetrimino, stdscr)
 
@@ -76,11 +76,15 @@ class Screen():
 
         curses.init_pair(SCORE_COLOR_PAIR, curses.COLOR_BLACK, curses.COLOR_GREEN)
 
-    def _render_tetris_score(self, score, stdscr):
-        header = ' Score: {}'.format(score)
+    def _render_tetris_score(self, total_score, last_score, stdscr):
+        header = ' Total score: {}'.format(total_score)
         if len(header) < TETRIS_BOX_WIDTH:
             header = header + (TETRIS_BOX_WIDTH - len(header)) * ' '
         stdscr.addstr(0, 0, header, curses.color_pair(SCORE_COLOR_PAIR))
+
+        last_score_str = 'Last score: {}'.format(last_score)
+        stdscr.addstr(0, TETRIS_BOX_WIDTH + 2, last_score_str, curses.color_pair(curses.COLOR_GREEN))
+
 
     def _render_lateral_walls(self, stdscr):
         for y in range(1, GAME_HEIGHT):
@@ -118,10 +122,10 @@ class Screen():
         return screen_y, screen_x
 
     def _render_next_tetrimino(self, next_tetrimino, stdscr):
-        stdscr.addstr(0, TETRIS_BOX_WIDTH + 2, 'Coming next: ' , curses.color_pair(curses.COLOR_GREEN))
+        stdscr.addstr(2, TETRIS_BOX_WIDTH + 2, 'Coming next: ' , curses.color_pair(curses.COLOR_GREEN))
 
         # Clear next tetrimino area
-        offset = (2, TETRIS_BOX_WIDTH + 2)
+        offset = (4, TETRIS_BOX_WIDTH + 2)
 
         for y in range(2):
             for x in range(4):

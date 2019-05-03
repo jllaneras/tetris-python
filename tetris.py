@@ -12,6 +12,14 @@ from config import (
     GAME_SPEED
 )
 
+_SCORES = {
+    0: 0,
+    1: 40,
+    2: 100,
+    3: 300,
+    4: 1200
+}
+
 
 class Tetris():
 
@@ -21,7 +29,8 @@ class Tetris():
         self._prev_activation_time = None
         self._curr_tetrimino = Tetrimino()
         self._next_tetrimino = Tetrimino()
-        self._score = 0
+        self._last_score = 0
+        self._total_score = 0
         self._exit = False
 
     def main(self, stdscr):
@@ -34,10 +43,14 @@ class Tetris():
             self._update(actions)
             self._sleep_until_end_of_tick(tick_start_time)
 
-            self._screen.render_tetris(self._matrix.get_matrix(), self._score, self._next_tetrimino, stdscr)
+            self._screen.render_tetris(
+                self._matrix.get_matrix(),
+                self._total_score,
+                self._last_score,
+                self._next_tetrimino, stdscr)
 
     def get_score(self):
-        return self._score
+        return self._total_score
 
     def _get_input_actions(self, input_char, tick_start_time):
         actions = []
@@ -64,8 +77,13 @@ class Tetris():
 
                 if not success and action == InputAction.DOWN:
                     # The tetrimino could not be moved down, which means it reached the bottom
-                    score = self._matrix.remove_completed_rows(self._curr_tetrimino)
-                    self._score += score
+                    num_removed_rows = self._matrix.remove_completed_rows(self._curr_tetrimino)
+
+                    curr_score = _SCORES[num_removed_rows]
+                    if curr_score > 0:
+                        self._last_score = curr_score
+                        self._total_score += curr_score
+
                     self._curr_tetrimino = self._next_tetrimino
                     self._next_tetrimino = Tetrimino()
 

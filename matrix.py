@@ -1,5 +1,4 @@
 from config import TETRIS_MATRIX_HEIGHT, TETRIS_MATRIX_WIDTH
-from tetrimino import Tetrimino
 from inputaction import InputAction
 
 
@@ -52,7 +51,7 @@ class Matrix():
     def remove_completed_rows(self, tetrimino):
         y_start, _ = tetrimino.position
         y_end = y_start + tetrimino.get_height()
-        score = 0
+        removed_rows = 0
 
         for y in range(y_start, y_end):
             complete = True
@@ -65,9 +64,9 @@ class Matrix():
             if complete:
                 self._matrix.pop(y)
                 self._matrix.insert(0, [None for x in range(TETRIS_MATRIX_WIDTH)])
-                score += TETRIS_MATRIX_WIDTH
+                removed_rows += 1
 
-        return score
+        return removed_rows
 
     def _collisions_found(self, tetrimino, new_position, rotated=False):
         if tetrimino.in_matrix():
