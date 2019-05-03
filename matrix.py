@@ -48,8 +48,7 @@ class Matrix():
                or x < 0 \
                or (x + tetrimino.get_width(rotated) - 1) >= TETRIS_MATRIX_WIDTH
 
-    def insert_new_tetrimino(self):
-        new_tetrimino = Tetrimino()
+    def insert_new_tetrimino(self, new_tetrimino):
         start_position = self.get_start_position(new_tetrimino)
         game_over = False
 
@@ -59,7 +58,7 @@ class Matrix():
             new_tetrimino.position = start_position
             self.insert_tetrimino(new_tetrimino)
 
-        return new_tetrimino, game_over
+        return game_over
 
     def insert_tetrimino(self, tetrimino):
         y_offset, x_offset = tetrimino.position

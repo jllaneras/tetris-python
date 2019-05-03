@@ -3,6 +3,7 @@
 import curses
 import time
 
+from tetrimino import Tetrimino
 from screen import Screen
 from inputaction import InputAction
 from matrix import Matrix
@@ -18,7 +19,8 @@ class Tetris():
         self._screen = Screen()
         self._matrix = Matrix()
         self._prev_activation_time = None
-        self._curr_tetrimino = None
+        self._curr_tetrimino = Tetrimino()
+        self._next_tetrimino = Tetrimino()
         self._score = 0
         self._exit = False
 
@@ -32,7 +34,7 @@ class Tetris():
             self._update(actions)
             self._sleep_until_end_of_tick(tick_start_time)
 
-            self._screen.render_tetris(self._matrix.get_matrix(), self._score, stdscr)
+            self._screen.render_tetris(self._matrix.get_matrix(), self._score, self._next_tetrimino, stdscr)
 
     def get_score(self):
         return self._score
@@ -51,8 +53,8 @@ class Tetris():
 
     def _update(self, actions):
         for action in actions:
-            if self._curr_tetrimino is None:
-                self._curr_tetrimino, game_over = self._matrix.insert_new_tetrimino()
+            if not self._curr_tetrimino.in_matrix():
+                game_over = self._matrix.insert_new_tetrimino(self._curr_tetrimino)
                 if game_over:
                     self._exit = True
                     break
@@ -64,7 +66,8 @@ class Tetris():
                     # The tetrimino could not be moved down, which means it reached the bottom
                     score = self._matrix.remove_completed_rows(self._curr_tetrimino)
                     self._score += score
-                    self._curr_tetrimino = None
+                    self._curr_tetrimino = self._next_tetrimino
+                    self._next_tetrimino = Tetrimino()
 
             elif action == InputAction.ROTATE:
                 self._matrix.rotate_tetrimino(self._curr_tetrimino)
@@ -74,14 +77,13 @@ class Tetris():
                 break
 
     def _tetrimino_should_go_down(self, tick_start_time):
-        down = (self._prev_activation_time is None  # is the beginning of the game
-                or tick_start_time - self._prev_activation_time > GAME_SPEED  # time on the current row is up
-                or self._curr_tetrimino is None)  # the previous tetrimino reach the floor
+        go_down = (not self._curr_tetrimino.in_matrix()  # there is not a tetrimino in the screen
+                or tick_start_time - self._prev_activation_time > GAME_SPEED)  # time on the current row is up
 
-        if down:
+        if go_down:
             self._prev_activation_time = tick_start_time
 
-        return down
+        return go_down
 
     def _sleep_until_end_of_tick(self, tick_start_time):
         elapsed_time = self._get_curr_time() - tick_start_time

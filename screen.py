@@ -32,14 +32,14 @@ class Screen():
 
         self._init_curses(stdscr)
 
-        self._render_tetris_score(stdscr, 0)
+        self._render_tetris_score(0, stdscr)
         self._render_lateral_walls(stdscr)
         self._render_bottom_wall(stdscr)
         self._render_help(stdscr)
 
         stdscr.refresh()
 
-    def render_tetris(self, tetris_matrix, score, stdscr):
+    def render_tetris(self, tetris_matrix, score, next_tetrimino, stdscr):
         for y, row in enumerate(tetris_matrix):
             for x, cell in enumerate(row):
                 screen_y, screen_x = self._tetrimino_cell_pos_to_screen_pos(TETRIS_MATRIX_POS, y, x)
@@ -48,7 +48,9 @@ class Screen():
                 else:
                     stdscr.addstr(screen_y, screen_x, ' ' * TetriminoCell.width, curses.color_pair(1))
 
-        self._render_tetris_score(stdscr, score)
+        self._render_tetris_score(score, stdscr)
+
+        self._render_next_tetrimino(next_tetrimino, stdscr)
 
         stdscr.refresh()
 
@@ -74,7 +76,7 @@ class Screen():
 
         curses.init_pair(SCORE_COLOR_PAIR, curses.COLOR_BLACK, curses.COLOR_GREEN)
 
-    def _render_tetris_score(self, stdscr, score):
+    def _render_tetris_score(self, score, stdscr):
         header = ' Score: {}'.format(score)
         if len(header) < TETRIS_BOX_WIDTH:
             header = header + (TETRIS_BOX_WIDTH - len(header)) * ' '
@@ -90,9 +92,11 @@ class Screen():
             stdscr.addstr(GAME_HEIGHT - 1, x, WALL_CHAR, curses.color_pair(curses.COLOR_GREEN))
 
     def _render_help(self, stdscr):
-        y = GAME_HEIGHT - 10
+        y = GAME_HEIGHT - 12
         x = TETRIS_BOX_WIDTH + 2
         help_lines = [
+            'HELP:',
+            '',
             '\u2190 = move left',
             '\u2192 = move right',
             '\u2193 = move down',
@@ -112,3 +116,22 @@ class Screen():
         screen_y = y_offset + matrix_y * TetriminoCell.height
         screen_x = x_offset + matrix_x * TetriminoCell.width
         return screen_y, screen_x
+
+    def _render_next_tetrimino(self, next_tetrimino, stdscr):
+        stdscr.addstr(0, TETRIS_BOX_WIDTH + 2, 'Coming next: ' , curses.color_pair(curses.COLOR_GREEN))
+
+        # Clear next tetrimino area
+        offset = (2, TETRIS_BOX_WIDTH + 2)
+
+        for y in range(2):
+            for x in range(4):
+                screen_y, screen_x = self._tetrimino_cell_pos_to_screen_pos(offset, y, x)
+                stdscr.addstr(screen_y, screen_x, ' ' * TetriminoCell.width, curses.color_pair(1))
+
+        for y, row in enumerate(next_tetrimino.get_cell_matrix()):
+            for x, cell in enumerate(row):
+                screen_y, screen_x = self._tetrimino_cell_pos_to_screen_pos(offset, y, x)
+                if cell is not None:
+                    stdscr.addstr(screen_y, screen_x, cell.str, curses.color_pair(cell.color))
+                else:
+                    stdscr.addstr(screen_y, screen_x, ' ' * TetriminoCell.width, curses.color_pair(1))
