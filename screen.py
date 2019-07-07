@@ -35,12 +35,12 @@ class Screen():
 
         self._render_tetris_score(0, 0, stdscr)
         self._render_lateral_walls(stdscr)
-        self._render_bottom_wall(stdscr)
+        self._render_bottom_wall(False, stdscr)
         self._render_help(stdscr)
 
         stdscr.refresh()
 
-    def render_tetris(self, tetris_matrix, total_score, last_score, next_tetrimino, stdscr):
+    def render_tetris(self, tetris_matrix, total_score, last_score, next_tetrimino, game_paused, stdscr):
         for y, row in enumerate(tetris_matrix):
             for x, cell in enumerate(row):
                 screen_y, screen_x = self._tetrimino_cell_pos_to_screen_pos(TETRIS_MATRIX_POS, y, x)
@@ -50,6 +50,8 @@ class Screen():
                     stdscr.addstr(screen_y, screen_x, ' ' * TetriminoCell.width, curses.color_pair(1))
 
         self._render_tetris_score(total_score, last_score, stdscr)
+
+        self._render_bottom_wall(game_paused, stdscr)
 
         self._render_next_tetrimino(next_tetrimino, stdscr)
 
@@ -92,9 +94,13 @@ class Screen():
             stdscr.addstr(y, 0, WALL_CHAR, curses.color_pair(WALL_COLOR_PAIR))
             stdscr.addstr(y, TETRIS_BOX_WIDTH - 1, WALL_CHAR, curses.color_pair(WALL_COLOR_PAIR))
 
-    def _render_bottom_wall(self, stdscr):
-        for x in range(TETRIS_BOX_WIDTH):
-            stdscr.addstr(GAME_HEIGHT - 1, x, WALL_CHAR, curses.color_pair(curses.COLOR_GREEN))
+    def _render_bottom_wall(self, game_paused, stdscr):
+        bottom_wall = ""
+        if game_paused:
+            bottom_wall = "  ** GAME PAUSED **"
+
+        bottom_wall += (TETRIS_BOX_WIDTH - len(bottom_wall)) * ' '
+        stdscr.addstr(GAME_HEIGHT - 1, 0, bottom_wall, curses.color_pair(SCORE_COLOR_PAIR))
 
     def _render_help(self, stdscr):
         y = GAME_HEIGHT - 12
@@ -107,8 +113,8 @@ class Screen():
             '\u2193 = move down',
             '\u2191 = rotate',
             '',
-            'Ctrl+S = pause',
-            'Ctrl+Q = continue',
+            'P = pause',
+            'C = continue',
             '',
             'Q = exit'
         ]

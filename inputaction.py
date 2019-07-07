@@ -7,6 +7,8 @@ class InputAction(Enum):
     RIGHT = 2
     ROTATE = 3
     QUIT = 4
+    PAUSE = 5
+    CONTINUE = 6
 
     @staticmethod
     def get_action(character):
@@ -18,6 +20,10 @@ class InputAction(Enum):
             return InputAction.RIGHT
         elif character in [ord(' '), curses.KEY_UP]:
             return InputAction.ROTATE
+        elif character in [ord('p'), ord('P')]:
+            return InputAction.PAUSE
+        elif character in [ord('c'), ord('C')]:
+            return InputAction.CONTINUE
         elif character in [ord('q'), ord('Q')]:
             return InputAction.QUIT
         else:

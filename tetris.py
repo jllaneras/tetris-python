@@ -26,19 +26,20 @@ class Tetris():
     def __init__(self):
         self._screen = Screen()
         self._matrix = Matrix()
-        self._prev_activation_time = self._get_curr_time()
+        self._row_time = 0
         self._curr_tetrimino = Tetrimino()
         self._next_tetrimino = Tetrimino()
         self._last_score = 0
         self._total_score = 0
         self._exit = False
+        self._game_paused = False
 
     def main(self, stdscr):
         self._screen.init_tetris(stdscr)
 
         while not self._exit:
             tick_start_time = Tetris._get_curr_time()
-            actions = self._get_input(stdscr.getch(), tick_start_time)
+            actions = self._get_input(stdscr.getch())
 
             if not self._curr_tetrimino.in_matrix():
                 game_over = self._matrix.insert_new_tetrimino(self._curr_tetrimino)
@@ -52,26 +53,28 @@ class Tetris():
                 self._matrix.get_matrix(),
                 self._total_score,
                 self._last_score,
-                self._next_tetrimino, stdscr)
+                self._next_tetrimino, 
+                self._game_paused,
+                stdscr)
 
     def get_score(self):
         return self._total_score
 
-    def _get_input(self, input_char, tick_start_time):
+    def _get_input(self, input_char):
         actions = []
 
         user_action = InputAction.get_action(input_char)
         if user_action is not None:
             actions.append(user_action)
 
-        if self._tetrimino_should_go_down(tick_start_time):
+        if self._tetrimino_should_go_down():
             actions.append(InputAction.DOWN)
 
         return actions
 
     def _process_input(self, actions):
         for action in actions:
-            if action in [InputAction.DOWN, InputAction.LEFT, InputAction.RIGHT]:
+            if not self._game_paused and action in [InputAction.DOWN, InputAction.LEFT, InputAction.RIGHT]:
                 success = self._matrix.move_tetrimino(self._curr_tetrimino, action)
 
                 if not success and action == InputAction.DOWN:
@@ -86,20 +89,29 @@ class Tetris():
                     self._curr_tetrimino = self._next_tetrimino
                     self._next_tetrimino = Tetrimino()
 
-            elif action == InputAction.ROTATE:
+            elif not self._game_paused and action == InputAction.ROTATE:
                 self._matrix.rotate_tetrimino(self._curr_tetrimino)
 
             elif action == InputAction.QUIT:
                 self._exit = True
                 break
+            
+            elif action == InputAction.PAUSE:
+                self._game_paused = True
 
-    def _tetrimino_should_go_down(self, tick_start_time):
-        go_down = (tick_start_time - self._prev_activation_time) > GAME_SPEED  # time on the current row is up
+            elif action == InputAction.CONTINUE:
+                self._game_paused = False
 
-        if go_down:
-            self._prev_activation_time = tick_start_time
+    def _tetrimino_should_go_down(self):
+        if self._game_paused:
+            return False
 
-        return go_down
+        if self._row_time >= GAME_SPEED:
+            self._row_time = 0  # reset row time counter
+            return True
+        else:
+            self._row_time += TICK_DURATION
+            return False
 
     def _sleep_until_end_of_tick(self, tick_start_time):
         elapsed_time = self._get_curr_time() - tick_start_time
